@@ -7,6 +7,7 @@ df_stats.iloc[:, 0:2] = df_stats.iloc[:, 0:2].astype(float)
 df_stats.iloc[:, 3:5] = df_stats.iloc[:, 3:5].astype(float)
 df_stats.iloc[:, 6] = df_stats.iloc[:, 6].astype(float)
 df_stats.iloc[:, 11:47] = df_stats.iloc[:, 11:47].astype(float)
+df_stats.fillna(0, inplace=True)
 df_stats["PPR"] = (
     df_stats["RECEIVING_REC"]
     + (1 / 10) * df_stats["RECEIVING_YDS"]
