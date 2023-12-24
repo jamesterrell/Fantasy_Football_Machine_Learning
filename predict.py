@@ -15,6 +15,7 @@ class Predict:
     df: pd.DataFrame
     players: list
     steps: int
+    regressor: object
     lags: int
 
     def __post_init__(self):
@@ -33,7 +34,7 @@ class Predict:
         self.data = self.data["PPR"]
         end_train = max(self.data.index) - relativedelta(months=self.steps - 1)
         forecaster = ForecasterAutoreg(
-            regressor=RandomForestRegressor(random_state=123), lags=self.lags
+            regressor=self.regressor(random_state=123), lags=self.lags
         )
 
         forecaster.fit(
