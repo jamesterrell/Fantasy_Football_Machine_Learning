@@ -13,16 +13,14 @@ from dataclasses import dataclass
 @dataclass
 class Predict:
     df: pd.DataFrame
-    players: list
+    player: str
     steps: int
     regressor: object
     lags: int
 
     def __post_init__(self):
-        self.results = []
-
-    def predict(self, player: str):
-        self.data = self.df.loc[self.df["PLAYER"] == player]
+        self.error_players = []
+        self.data = self.df.loc[self.df["PLAYER"] == self.player]
         self.data["FORECAST_DATE"] = pd.date_range(
             "2018-01-01", periods=len(self.data), freq="MS"
         )
@@ -32,61 +30,61 @@ class Predict:
         self.data = self.data.set_index("FORECAST_DATE")
         self.data = self.data.asfreq("MS")
         self.data = self.data["PPR"]
-        end_train = max(self.data.index) - relativedelta(months=self.steps - 1)
+        self.length = len(self.data)
+        if self.lags*2 > int(self.length):
+            self.lags = int(round(self.length / 2, 0) - 1)
+            self.steps = self.lags
+        
+        if int(self.length) == 2:
+            self.lags = 1
+            self.steps = 1
+
+        self.end_train = max(self.data.index) - relativedelta(months=self.lags - 1)
+
+    def predict(self):
         forecaster = ForecasterAutoreg(
             regressor=self.regressor(random_state=123), lags=self.lags
         )
 
         forecaster.fit(
             y=self.data.loc[
-                : max(self.data.index) - relativedelta(months=self.steps - 1)
+                : max(self.data.index) - relativedelta(months=self.lags - 1)
             ]
         )
         predictions = forecaster.predict(steps=self.steps)
         error_mape = mean_absolute_percentage_error(
-            y_true=self.data.loc[end_train:], y_pred=predictions
+            y_true=self.data.loc[self.end_train :], y_pred=predictions
         )
-        self.results.append(
-            [
-                player,
-                np.sum(self.data.loc[end_train:]),
-                np.sum(predictions),
-                abs(np.sum(self.data.loc[end_train:]) - np.sum(predictions))
-                / np.sum(self.data.loc[end_train:]),
-                error_mape,
-                np.size(self.data.loc[end_train:]),
-                self.lags,
-                forecaster.regressor,
-            ]
+        error_rsme = np.sqrt(
+            mean_squared_error(
+                y_true=self.data.loc[self.end_train :], y_pred=predictions
+            )
         )
+        self.results = [
+            self.player,
+            np.sum(self.data.loc[self.end_train :]),
+            np.sum(predictions),
+            abs(np.sum(self.data.loc[self.end_train :]) - np.sum(predictions)) / np.sum(self.data.loc[self.end_train :]),
+            error_mape,
+            error_rsme,
+            np.size(self.data.loc[self.end_train :]),
+            self.lags,
+            forecaster.regressor,
+        ]
 
-    def predict_all(self):
-        for player in self.players:
-            try:
-                self.predict(player=player)
+        columns = [
+            "PLAYER",
+            "ACTUAL SEASON TOTAL",
+            "PREDICTED",
+            "SEASON MAPE",
+            "GAME MAPE",
+            "GAME RSME",
+            "GAMES PREDICTED",
+            "LAGS",
+            "REGRESSOR",
+        ]
 
-            except ValueError as e:
-                if (
-                    "(0)" in str(e)
-                    or "(1)" in str(e)
-                    or "(2)" in str(e)
-                    or "(3)" in str(e)
-                ):
-                    pass
-                else:
-                    self.lags = 3
-                    self.predict(player=player)
-
-        return pd.DataFrame(
-            self.results,
-            columns=[
-                "PLAYER",
-                "ACTUAL SEASON TOTAL",
-                "PREDICTED",
-                "SEASON MAPE",
-                "GAME MAPE",
-                "GAMES PREDICTED",
-                "LAGS",
-                "REGRESSOR",
-            ],
-        )
+        # Create a DataFrame with a single row and the specified columns
+        result_df = pd.DataFrame([self.results], columns=columns)
+        return result_df
+   
