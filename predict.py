@@ -32,16 +32,18 @@ class Predict:
         self.data = self.data["PPR"]
         self.length = len(self.data)
         if self.lags*2 > int(self.length):
+            print('Not enough data. Adjusting lags.')
             self.lags = int(round(self.length / 2, 0) - 1)
             self.steps = self.lags
         
         if int(self.length) == 2:
+            print('Not enough data. Adjusting lags.')
             self.lags = 1
             self.steps = 1
 
         self.end_train = max(self.data.index) - relativedelta(months=self.lags - 1)
 
-    def predict(self):
+    def eval(self):
         forecaster = ForecasterAutoreg(
             regressor=self.regressor(random_state=123), lags=self.lags
         )
