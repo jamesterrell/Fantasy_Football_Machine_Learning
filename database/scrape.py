@@ -5,8 +5,12 @@ import html5lib
 import warnings
 import numpy as np
 import time
-warnings.simplefilter(action='ignore', category=FutureWarning)
-warnings.filterwarnings("ignore", category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
+warnings.filterwarnings(
+    "ignore", category=requests.packages.urllib3.exceptions.InsecureRequestWarning
+)
+
 
 def scrape_sp(player_code: str):
     URL = f"https://www.pro-football-reference.com/players/{player_code}/gamelog/advanced/"
@@ -54,64 +58,65 @@ def scrape_sp(player_code: str):
         df["RUSHING_ATT_BR"] = 0
 
     if "RECEIVING_YDS" not in df.columns:
-        df['RECEIVING_TGT'] = 0
-        df['RECEIVING_REC'] = 0
-        df['RECEIVING_YDS'] = 0
-        df['RECEIVING_TD'] = 0
-        df['RECEIVING_1D'] = 0
-        df['RECEIVING_YBC'] = 0
-        df['RECEIVING_YBC_R'] = 0
-        df['RECEIVING_YAC'] = 0
-        df['RECEIVING_YAC_R'] = 0
-        df['RECEIVING_ADOT'] = 0 
-        df['RECEIVING_BRKTKL'] = 0
-        df['RECEIVING_REC_BR'] = 0
-        df['RECEIVING_DROP'] = 0 
-        df['RECEIVING_DROP_PCT'] = 0 
-        df['RECEIVING_INT'] = 0
-        df['RECEIVING_RAT'] = 0
+        df["RECEIVING_TGT"] = 0
+        df["RECEIVING_REC"] = 0
+        df["RECEIVING_YDS"] = 0
+        df["RECEIVING_TD"] = 0
+        df["RECEIVING_1D"] = 0
+        df["RECEIVING_YBC"] = 0
+        df["RECEIVING_YBC_R"] = 0
+        df["RECEIVING_YAC"] = 0
+        df["RECEIVING_YAC_R"] = 0
+        df["RECEIVING_ADOT"] = 0
+        df["RECEIVING_BRKTKL"] = 0
+        df["RECEIVING_REC_BR"] = 0
+        df["RECEIVING_DROP"] = 0
+        df["RECEIVING_DROP_PCT"] = 0
+        df["RECEIVING_INT"] = 0
+        df["RECEIVING_RAT"] = 0
 
     df = df[
-                [
-                    "GAME_ORDER",
-                    "YEAR",
-                    "DATE",
-                    "GAME_NUMBER",
-                    "WEEK",
-                    "PLAYER",
-                    "AGE",
-                    "TEAM",
-                    "OPPONENT",
-                    "RESULT",
-                    "RUSHING_ATT",
-                    "RUSHING_YDS",
-                    "RUSHING_TD",
-                    "RUSHING_1D",
-                    "RUSHING_YBC",
-                    "RUSHING_YBC_ATT",
-                    "RUSHING_YAC",
-                    "RUSHING_YAC_ATT",
-                    "RUSHING_BRKTKL",
-                    "RUSHING_ATT_BR",
-                    "RECEIVING_TGT",
-                    "RECEIVING_REC",
-                    "RECEIVING_YDS",
-                    "RECEIVING_TD",
-                    "RECEIVING_1D",
-                    "RECEIVING_YBC",
-                    "RECEIVING_YBC_R",
-                    "RECEIVING_YAC",
-                    "RECEIVING_YAC_R",
-                    "RECEIVING_ADOT",
-                    "RECEIVING_BRKTKL",
-                    "RECEIVING_REC_BR",
-                    "RECEIVING_DROP",
-                    "RECEIVING_DROP_PCT",
-                    "RECEIVING_INT",
-                    "RECEIVING_RAT",
-                ]
-            ]
+        [
+            "GAME_ORDER",
+            "YEAR",
+            "DATE",
+            "GAME_NUMBER",
+            "WEEK",
+            "PLAYER",
+            "AGE",
+            "TEAM",
+            "OPPONENT",
+            "RESULT",
+            "RUSHING_ATT",
+            "RUSHING_YDS",
+            "RUSHING_TD",
+            "RUSHING_1D",
+            "RUSHING_YBC",
+            "RUSHING_YBC_ATT",
+            "RUSHING_YAC",
+            "RUSHING_YAC_ATT",
+            "RUSHING_BRKTKL",
+            "RUSHING_ATT_BR",
+            "RECEIVING_TGT",
+            "RECEIVING_REC",
+            "RECEIVING_YDS",
+            "RECEIVING_TD",
+            "RECEIVING_1D",
+            "RECEIVING_YBC",
+            "RECEIVING_YBC_R",
+            "RECEIVING_YAC",
+            "RECEIVING_YAC_R",
+            "RECEIVING_ADOT",
+            "RECEIVING_BRKTKL",
+            "RECEIVING_REC_BR",
+            "RECEIVING_DROP",
+            "RECEIVING_DROP_PCT",
+            "RECEIVING_INT",
+            "RECEIVING_RAT",
+        ]
+    ]
     return df
+
 
 def scrape_qb(player_code: str):
     URL = f"https://www.pro-football-reference.com/players/{player_code}/gamelog"
@@ -205,3 +210,96 @@ def get_all_stats(player_code_str: str):
         return df_all2
     except AttributeError as e:
         print(player_code_str, str(e))
+
+
+def scrape_defense(year, defense):
+    year = year
+    defense = defense
+
+    URL = f"https://www.pro-football-reference.com/teams/{defense}/{year}/gamelog/"
+
+    res = requests.get(URL, verify=False)
+
+    soup = BS(res.content, "html.parser")
+
+    table = soup.find_all("table", {"id": f"gamelog_opp{year}"})
+    df = pd.read_html(str(table))[0]
+    flattened_columns = ["_".join(col).strip() for col in df.columns.values]
+    df.columns = flattened_columns
+    df.rename(
+        columns={
+            "Unnamed: 0_level_0_Week": "WEEK",
+        },
+        inplace=True,
+    )
+    # df.drop(columns=["Unnamed: 7_level_0_Unnamed: 7_level_1"], inplace=True)
+    df.columns = df.columns.str.upper()
+    df.columns = df.columns.str.replace(".", "")
+    df.columns = df.columns.str.replace("/", "_")
+    df.columns = df.columns.str.replace(".", "")
+    df.columns = df.columns.str.replace(" ", "_")
+    df.columns = df.columns.str.replace("%", "_PCT")
+
+    # df.fillna(0, inplace=True)
+    df["YEAR"] = year
+    df["DEF_TEAM"] = defense.upper()
+    df
+    df_def = df[
+        [
+            "DEF_TEAM",
+            "YEAR",
+            "WEEK",
+            "SCORE_OPP",
+            "PASSING_CMP",
+            "PASSING_ATT",
+            "PASSING_YDS",
+            "PASSING_TD",
+            "PASSING_INT",
+            "PASSING_SK",
+            "PASSING_Y_A",
+            "PASSING_NY_A",
+            "PASSING_CMP_PCT",
+            "PASSING_RATE",
+            "RUSHING_ATT",
+            "RUSHING_YDS",
+            "RUSHING_Y_A",
+            "RUSHING_TD",
+        ]
+    ]
+    df_def.dropna(inplace=True)
+    rolling = (
+        df_def[
+            [
+                "SCORE_OPP",
+                "PASSING_CMP",
+                "PASSING_ATT",
+                "PASSING_YDS",
+                "PASSING_TD",
+                "PASSING_INT",
+                "PASSING_SK",
+                "PASSING_Y_A",
+                "PASSING_NY_A",
+                "PASSING_CMP_PCT",
+                "PASSING_RATE",
+                "RUSHING_ATT",
+                "RUSHING_YDS",
+                "RUSHING_Y_A",
+                "RUSHING_TD",
+            ]
+        ]
+        .rolling(window=15, min_periods=1)
+        .mean()
+    )
+
+    df_dfns = df_def[["DEF_TEAM", "YEAR", "WEEK"]].join(rolling, how="left")
+    # for future projections
+    while len(df_dfns) < 17:
+        new_row = df_dfns.iloc[-1].copy()
+
+        # Increment the "week" column in the new row
+        new_row["WEEK"] += 1
+
+        # Append the new row to the DataFrame
+        df_dfns = df_dfns.append(new_row, ignore_index=True)
+
+    return df_dfns
