@@ -213,9 +213,6 @@ def get_all_stats(player_code_str: str):
 
 
 def scrape_defense(year, defense):
-    year = year
-    defense = defense
-
     URL = f"https://www.pro-football-reference.com/teams/{defense}/{year}/gamelog/"
 
     res = requests.get(URL, verify=False)
@@ -242,6 +239,7 @@ def scrape_defense(year, defense):
 
     # df.fillna(0, inplace=True)
     df["YEAR"] = year
+    df["WEEK"] = df["WEEK"].astype(float)
     df["DEF_TEAM"] = defense.upper()
     df
     df_def = df[
