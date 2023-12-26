@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup as BS
 import pandas as pd
-from scrape import get_all_stats
+from database.scrape import get_all_stats
 pd.set_option('display.max_columns', 70)
 
 URL = f"https://www.pro-football-reference.com/years/2023/fantasy.htm"
