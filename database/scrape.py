@@ -1,9 +1,7 @@
 import requests
 from bs4 import BeautifulSoup as BS
 import pandas as pd
-import html5lib
 import warnings
-import numpy as np
 import time
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -42,7 +40,7 @@ def scrape_sp(player_code: str):
     df.columns = df.columns.str.replace(".", "")
     df.columns = df.columns.str.replace(" ", "_")
     df.columns = df.columns.str.replace("%", "_PCT")
-    df = df.loc[df["DATE"].str.contains("-") == True]
+    df = df.loc[df["DATE"].str.contains("-") == True]  # noqa: E712
     df["PLAYER"] = str(name[3].text)
     df.fillna(0, inplace=True)
     if "RUSHING_YDS" not in df.columns:
@@ -148,14 +146,14 @@ def scrape_qb(player_code: str):
     df_pass.columns = df_pass.columns.str.replace(".", "")
     df_pass.columns = df_pass.columns.str.replace(" ", "_")
     df_pass.columns = df_pass.columns.str.replace("%", "_PCT")
-    df_pass = df_pass.loc[df_pass["DATE"].str.contains("-") == True]
-    df_pass = df_pass.loc[df_pass["GAME_STARTED"].str.contains("Did Not Play") == False]
-    df_pass = df_pass.loc[df_pass["GAME_STARTED"].str.contains("Inactive") == False]
+    df_pass = df_pass.loc[df_pass["DATE"].str.contains("-") == True]  # noqa: E712
+    df_pass = df_pass.loc[df_pass["GAME_STARTED"].str.contains("Did Not Play") == False]  # noqa: E712
+    df_pass = df_pass.loc[df_pass["GAME_STARTED"].str.contains("Inactive") == False]  # noqa: E712
     df_pass = df_pass.loc[
-        df_pass["GAME_STARTED"].str.contains("Injured Reserve") == False
+        df_pass["GAME_STARTED"].str.contains("Injured Reserve") == False  # noqa: E712
     ]
     df_pass = df_pass.loc[
-        df_pass["GAME_STARTED"].str.contains("COVID-19 List") == False
+        df_pass["GAME_STARTED"].str.contains("COVID-19 List") == False  # noqa: E712
     ]
     df_pass = df_pass.filter(
         items=[
@@ -193,6 +191,7 @@ def get_all_stats(player_code_str: str):
         df_all = pd.merge(df_np, df_p, how="inner", on="DATE", suffixes=["", "_y"])
         columns_to_drop = df_all.filter(like="_y").columns
         df_all = df_all.drop(columns=columns_to_drop)
+        print(f'{player_code_str} done.')
         return df_all
     except KeyError:
         df_np["PASSING_CMP"] = 0
@@ -207,10 +206,10 @@ def get_all_stats(player_code_str: str):
         df_np["PASSING_Y_A"] = 0
         df_np["PASSING_AY_A"] = 0
         df_all2 = df_np
+        print(f'{player_code_str} done.')
         return df_all2
     except AttributeError as e:
         print(player_code_str, str(e))
-
 
 def scrape_defense(year, defense):
     URL = f"https://www.pro-football-reference.com/teams/{defense}/{year}/gamelog/"
@@ -264,40 +263,40 @@ def scrape_defense(year, defense):
             "RUSHING_TD",
         ]
     ]
-    df_def.dropna(inplace=True)
-    rolling = (
-        df_def[
-            [
-                "SCORE_OPP",
-                "PASSING_CMP",
-                "PASSING_ATT",
-                "PASSING_YDS",
-                "PASSING_TD",
-                "PASSING_INT",
-                "PASSING_SK",
-                "PASSING_Y_A",
-                "PASSING_NY_A",
-                "PASSING_CMP_PCT",
-                "PASSING_RATE",
-                "RUSHING_ATT",
-                "RUSHING_YDS",
-                "RUSHING_Y_A",
-                "RUSHING_TD",
-            ]
-        ]
-        .rolling(window=15, min_periods=1)
-        .mean()
-    )
+    # df_def.dropna(inplace=True)
+    # rolling = (
+    #     df_def[
+    #         [
+    #             "SCORE_OPP",
+    #             "PASSING_CMP",
+    #             "PASSING_ATT",
+    #             "PASSING_YDS",
+    #             "PASSING_TD",
+    #             "PASSING_INT",
+    #             "PASSING_SK",
+    #             "PASSING_Y_A",
+    #             "PASSING_NY_A",
+    #             "PASSING_CMP_PCT",
+    #             "PASSING_RATE",
+    #             "RUSHING_ATT",
+    #             "RUSHING_YDS",
+    #             "RUSHING_Y_A",
+    #             "RUSHING_TD",
+    #         ]
+    #     ]
+    #     .rolling(window=15, min_periods=1)
+    #     .mean()
+    # )
 
-    df_dfns = df_def[["DEF_TEAM", "YEAR", "WEEK"]].join(rolling, how="left")
-    # for future projections
-    while len(df_dfns) < 17:
-        new_row = df_dfns.iloc[-1].copy()
+    # df_dfns = df_def[["DEF_TEAM", "YEAR", "WEEK"]].join(rolling, how="left")
+    # # for future projections
+    # while len(df_dfns) < 17:
+    #     new_row = df_dfns.iloc[-1].copy()
 
-        # Increment the "week" column in the new row
-        new_row["WEEK"] += 1
+    #     # Increment the "week" column in the new row
+    #     new_row["WEEK"] += 1
 
-        # Append the new row to the DataFrame
-        df_dfns = df_dfns.append(new_row, ignore_index=True)
+    #     # Append the new row to the DataFrame
+    #     df_dfns = df_dfns.append(new_row, ignore_index=True)
 
-    return df_dfns
+    return df_def
