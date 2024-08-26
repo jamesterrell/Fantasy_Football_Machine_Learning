@@ -188,7 +188,7 @@ def get_all_stats(player_code_str: str):
     df_np = scrape_sp(player_code=player_code_str)
     try:
         df_p = scrape_qb(player_code=player_code_str)
-        df_all = pd.merge(df_np, df_p, how="inner", on="DATE", suffixes=["", "_y"])
+        df_all = pd.merge(df_np, df_p, how="left", on="DATE", suffixes=["", "_y"])
         columns_to_drop = df_all.filter(like="_y").columns
         df_all = df_all.drop(columns=columns_to_drop)
         print(f'{player_code_str} done.')
