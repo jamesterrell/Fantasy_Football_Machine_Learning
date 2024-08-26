@@ -184,7 +184,7 @@ def scrape_qb(player_code: str):
 
 
 def get_all_stats(player_code_str: str):
-    time.sleep(6.1)
+    time.sleep(6.1) # you get put in "jail" for more than 10 requests in a minute
     df_np = scrape_sp(player_code=player_code_str)
     try:
         df_p = scrape_qb(player_code=player_code_str)
@@ -263,40 +263,5 @@ def scrape_defense(year, defense):
             "RUSHING_TD",
         ]
     ]
-    # df_def.dropna(inplace=True)
-    # rolling = (
-    #     df_def[
-    #         [
-    #             "SCORE_OPP",
-    #             "PASSING_CMP",
-    #             "PASSING_ATT",
-    #             "PASSING_YDS",
-    #             "PASSING_TD",
-    #             "PASSING_INT",
-    #             "PASSING_SK",
-    #             "PASSING_Y_A",
-    #             "PASSING_NY_A",
-    #             "PASSING_CMP_PCT",
-    #             "PASSING_RATE",
-    #             "RUSHING_ATT",
-    #             "RUSHING_YDS",
-    #             "RUSHING_Y_A",
-    #             "RUSHING_TD",
-    #         ]
-    #     ]
-    #     .rolling(window=15, min_periods=1)
-    #     .mean()
-    # )
-
-    # df_dfns = df_def[["DEF_TEAM", "YEAR", "WEEK"]].join(rolling, how="left")
-    # # for future projections
-    # while len(df_dfns) < 17:
-    #     new_row = df_dfns.iloc[-1].copy()
-
-    #     # Increment the "week" column in the new row
-    #     new_row["WEEK"] += 1
-
-    #     # Append the new row to the DataFrame
-    #     df_dfns = df_dfns.append(new_row, ignore_index=True)
-
+    
     return df_def
