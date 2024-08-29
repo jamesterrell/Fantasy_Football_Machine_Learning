@@ -21,18 +21,25 @@ class Evaluate:
     player : str
         The name of the player to evaluate.
     steps : int
-        The number of steps (months) to forecast into the future.
+        The number of future time steps (months) to forecast.
     regressor : object
         The regression model to use for forecasting.
     lags : int
         The number of lagged values to use for the autoregressive model.
+    exogs : list, optional
+        A list of column names representing exogenous variables to be used for forecasting.
+        If None, the forecasting will be performed without exogenous variables.
 
     Methods:
     --------
     __post_init__():
-        Initializes the evaluation, checks data sufficiency, and sets up the training period.
+        Prepares the data for evaluation, including filtering the player data, setting up the
+        forecast dates, and adjusting lags and steps based on data availability.
+
     eval():
-        Performs the forecasting and evaluation of the model, returns a DataFrame with evaluation results.
+        Performs the forecasting and evaluation of the model, fitting it on historical data and
+        making predictions. Returns a DataFrame with evaluation metrics such as MAPE, RMSE, actual
+        season total, predicted total, and details about the forecasting model used.
     """
 
     df: pd.DataFrame
@@ -40,13 +47,15 @@ class Evaluate:
     steps: int
     regressor: object
     lags: int
+    exogs: list = None
 
     def __post_init__(self) -> None:
         """
-        Post-initialization processing to set up data for the evaluation.
+        Initializes the evaluation process by setting up the data and configuration.
 
-        This method filters the data for the specific player, sets up forecast dates,
-        checks if there is enough data to perform the evaluation, and adjusts lags and steps if needed.
+        This method filters the DataFrame to include only the data for the specified player,
+        assigns forecast dates, checks if there is sufficient data for the evaluation, and adjusts
+        the lags and steps if necessary to ensure that the model can be evaluated effectively.
         """
         self.error_players = []
         self.data = self.df.loc[self.df["PLAYER"] == self.player]
@@ -58,7 +67,7 @@ class Evaluate:
         )
         self.data = self.data.set_index("FORECAST_DATE")
         self.data = self.data.asfreq("MS")
-        self.data = self.data["PPR"]
+        self.target = self.data["PPR"]
         self.length = len(self.data)
 
         # If they don't have at least double the lag amount of games, there's not enough data to
@@ -83,62 +92,85 @@ class Evaluate:
 
         self.end_train = max(self.data.index) - relativedelta(months=self.steps - 1)
 
+
     def eval(self) -> pd.DataFrame:
         """
-        Evaluates the forecasting model by fitting it on historical data and making predictions.
+        Evaluates the forecasting model by fitting it on historical player data and making predictions.
+
+        Depending on whether exogenous variables are provided, the method fits the model using those
+        variables or without them. It then generates predictions for the specified number of steps
+        and calculates evaluation metrics.
 
         Returns:
         --------
-        result_df : pd.DataFrame
-            A DataFrame containing evaluation metrics such as MAPE, RMSE, actual season total,
-            predicted total, and details about the forecasting model used.
+        pd.DataFrame
+            A DataFrame containing evaluation metrics such as the actual season total, predicted total,
+            season MAPE (Mean Absolute Percentage Error), game MAPE, game RMSE (Root Mean Squared Error),
+            the number of games predicted, number of lags, and the type of regressor used.
         """
-        try:
-            forecaster = ForecasterAutoreg(
-                regressor=self.regressor(random_state=123), lags=self.lags
-            )
+        # try:
+        forecaster = ForecasterAutoreg(regressor=self.regressor, lags=self.lags)
 
+        if self.exogs is not None:
+            self.exog_vars = self.data[self.exogs]
             forecaster.fit(
-                y=self.data.loc[
-                    : max(self.data.index) - relativedelta(months=self.steps - 1)
-                ]
+                y=self.target.loc[
+                    : max(self.data.index) - relativedelta(months=self.steps)
+                ],
+                exog=self.exog_vars[
+                    : max(self.data.index) - relativedelta(months=self.steps)
+                ],
             )
-            predictions = forecaster.predict(steps=self.steps)
-            error_mape = mean_absolute_percentage_error(
-                y_true=self.data.loc[self.end_train :], y_pred=predictions
+            predictions = forecaster.predict(
+                steps=self.steps,
+                exog=self.exog_vars[
+                    (max(self.data.index) - relativedelta(months=self.steps - 1)) :
+                ],
             )
-            error_rsme = np.sqrt(
-                mean_squared_error(
-                    y_true=self.data.loc[self.end_train :], y_pred=predictions
-                )
-            )
-            self.results = [
-                self.player,
-                np.sum(self.data.loc[self.end_train :]),
-                np.sum(predictions),
-                abs(np.sum(self.data.loc[self.end_train :]) - np.sum(predictions))
-                / np.sum(self.data.loc[self.end_train :]),
-                error_mape,
-                error_rsme,
-                np.size(self.data.loc[self.end_train :]),
-                self.lags,
-                forecaster.regressor,
-            ]
 
-            columns = [
-                "PLAYER",
-                "ACTUAL SEASON TOTAL",
-                "PREDICTED",
-                "SEASON MAPE",
-                "GAME MAPE",
-                "GAME RSME",
-                "GAMES PREDICTED",
-                "LAGS",
-                "REGRESSOR",
-            ]
+        else:
+            forecaster.fit(
+                y=self.target.loc[
+                    : max(self.data.index) - relativedelta(months=self.steps)
+                ],
+            )
+            predictions = forecaster.predict(
+                steps=self.steps,
+            )
 
-            # Create a DataFrame with a single row and the specified columns
-            result_df = pd.DataFrame([self.results], columns=columns)
-            return result_df
-        except ValueError or TypeError:
-            print(f"{self.player} does not have enough data.")
+        error_mape = mean_absolute_percentage_error(
+            y_true=self.target.loc[self.end_train :], y_pred=predictions
+        )
+        error_rsme = np.sqrt(
+            mean_squared_error(
+                y_true=self.target.loc[self.end_train :], y_pred=predictions
+            )
+        )
+        self.results = [
+            self.player,
+            np.sum(self.target.loc[self.end_train :]),
+            np.sum(predictions),
+            abs(np.sum(self.target.loc[self.end_train :]) - np.sum(predictions))
+            / np.sum(self.target.loc[self.end_train :]),
+            error_mape,
+            error_rsme,
+            np.size(self.target.loc[self.end_train :]),
+            self.lags,
+            forecaster.regressor,
+        ]
+
+        columns = [
+            "PLAYER",
+            "ACTUAL SEASON TOTAL",
+            "PREDICTED",
+            "SEASON MAPE",
+            "GAME MAPE",
+            "GAME RSME",
+            "GAMES PREDICTED",
+            "LAGS",
+            "REGRESSOR",
+        ]
+
+        result_df = pd.DataFrame([self.results], columns=columns)
+        return result_df
+

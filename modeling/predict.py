@@ -6,16 +6,16 @@ import pandas as pd
 @dataclass
 class Predict:
     """
-    A class to evaluate a forecasting model for a specific player's performance.
+    A class to predict a specific player's performance using a forecasting model.
 
     Attributes:
     -----------
     df : pd.DataFrame
         The DataFrame containing player data with a "PLAYER" column and a "PPR" column.
     player : str
-        The name of the player to evaluate.
+        The name of the player to predict performance for.
     steps : int
-        The number of steps (months) to forecast into the future.
+        The number of future time steps (months) to forecast.
     regressor : object
         The regression model to use for forecasting.
     lags : int
@@ -24,9 +24,10 @@ class Predict:
     Methods:
     --------
     __post_init__():
-        Initializes the evaluation, checks data sufficiency, and sets up the training period.
-    eval():
-        Performs the forecasting and evaluation of the model, returns a DataFrame with evaluation results.
+        Sets up the data for prediction, including filtering the player's data and setting up forecast dates.
+    predict_season():
+        Fits the forecasting model on historical data and makes predictions for the specified number of future steps.
+        Returns a list with the player's name and the sum of the predicted values.
     """
 
     df: pd.DataFrame
@@ -37,10 +38,10 @@ class Predict:
 
     def __post_init__(self) -> None:
         """
-        Post-initialization processing to set up data for the evaluation.
+        Post-initialization processing to set up data for the prediction.
 
-        This method filters the data for the specific player, sets up forecast dates,
-        checks if there is enough data to perform the evaluation, and adjusts lags and steps if needed.
+        This method filters the DataFrame to include only the data for the specified player,
+        sets up forecast dates, and ensures the time series data is properly formatted.
         """
         self.data = self.df.loc[self.df["PLAYER"] == self.player]
         self.data["FORECAST_DATE"] = pd.date_range(
@@ -61,13 +62,16 @@ class Predict:
 
     def predict_season(self) -> pd.DataFrame:
         """
-        Evaluates the forecasting model by fitting it on historical data and making predictions.
+        Fits the forecasting model on historical player data and makes predictions.
+
+        This method trains the autoregressive model using the specified regressor and lagged values,
+        then predicts the player's performance for the given number of future steps.
 
         Returns:
         --------
-        result_df : pd.DataFrame
-            A DataFrame containing evaluation metrics such as MAPE, RMSE, actual season total,
-            predicted total, and details about the forecasting model used.
+        list
+            A list containing the player's name and the sum of the predicted performance values.
+            If insufficient data is available, a message is printed indicating the lack of data.
         """
         try:
             forecaster = ForecasterAutoreg(
