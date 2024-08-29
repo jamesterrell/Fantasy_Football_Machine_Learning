@@ -11,6 +11,23 @@ warnings.filterwarnings(
 
 
 def scrape_sp(player_code: str):
+    """
+    Scrapes advanced rushing and receiving statistics for a given skill player from Pro Football Reference.
+
+    This function sends an HTTP GET request to the specified URL for the player's advanced statistics,
+    parses the HTML content, and returns a DataFrame with cleaned and standardized column names.
+    If certain columns related to rushing or receiving statistics are not present, they are added with default values of zero.
+
+    Parameters:
+    -----------
+    player_code : str
+        The code representing the player on the Pro Football Reference website (e.g., "B/BradTo00").
+
+    Returns:
+    --------
+    pd.DataFrame
+        A DataFrame containing the player's game-by-game advanced rushing and receiving statistics, with standardized column names.
+    """
     URL = f"https://www.pro-football-reference.com/players/{player_code}/gamelog/advanced/"
     res = requests.get(URL, verify=False)
     soup = BS(res.content, "html.parser")
@@ -117,6 +134,23 @@ def scrape_sp(player_code: str):
 
 
 def scrape_qb(player_code: str):
+    """
+    Scrapes passing statistics for a given quarterback from Pro Football Reference.
+
+    This function sends an HTTP GET request to the specified URL for the player's passing statistics,
+    parses the HTML content, and returns a DataFrame with cleaned and standardized column names.
+    The function filters out games where the quarterback did not play or was inactive due to various reasons.
+
+    Parameters:
+    -----------
+    player_code : str
+        The code representing the quarterback on the Pro Football Reference website (e.g., "B/BradTo00").
+
+    Returns:
+    --------
+    pd.DataFrame
+        A DataFrame containing the quarterback's game-by-game passing statistics, with standardized column names.
+    """
     URL = f"https://www.pro-football-reference.com/players/{player_code}/gamelog"
     res = requests.get(URL, verify=False)
     soup = BS(res.content, "html.parser")
@@ -184,14 +218,32 @@ def scrape_qb(player_code: str):
 
 
 def get_all_stats(player_code_str: str):
-    time.sleep(6.1) # you get put in "jail" for more than 10 requests in a minute
+    """
+    Collects and merges advanced rushing/receiving and passing statistics for a given player.
+
+    This function first waits for a brief period to avoid being blocked by the server for making too many requests.
+    It then calls the `scrape_sp` function to retrieve advanced rushing/receiving stats, and attempts to call `scrape_qb`
+    for passing stats. If successful, the two DataFrames are merged. If a KeyError occurs, default values are assigned
+    to missing passing statistics. If an AttributeError occurs, an error message is printed.
+
+    Parameters:
+    -----------
+    player_code_str : str
+        The code representing the player on the Pro Football Reference website (e.g., "B/BradTo00").
+
+    Returns:
+    --------
+    pd.DataFrame
+        A merged DataFrame containing the player's game-by-game statistics, including both rushing/receiving and passing stats.
+    """
+    time.sleep(6.1)  # you get put in "jail" for more than 10 requests in a minute
     df_np = scrape_sp(player_code=player_code_str)
     try:
         df_p = scrape_qb(player_code=player_code_str)
         df_all = pd.merge(df_np, df_p, how="left", on="DATE", suffixes=["", "_y"])
         columns_to_drop = df_all.filter(like="_y").columns
         df_all = df_all.drop(columns=columns_to_drop)
-        print(f'{player_code_str} done.')
+        print(f"{player_code_str} done.")
         return df_all
     except KeyError:
         df_np["PASSING_CMP"] = 0
@@ -206,12 +258,32 @@ def get_all_stats(player_code_str: str):
         df_np["PASSING_Y_A"] = 0
         df_np["PASSING_AY_A"] = 0
         df_all2 = df_np
-        print(f'{player_code_str} done.')
+        print(f"{player_code_str} done.")
         return df_all2
     except AttributeError as e:
         print(player_code_str, str(e))
 
+
 def scrape_defense(year, defense):
+    """
+    Scrapes defensive game-by-game statistics for a specific team in a given year from Pro Football Reference.
+
+    This function sends an HTTP GET request to the specified URL for the team's defensive statistics for the given year,
+    parses the HTML content, and returns a DataFrame with cleaned and standardized column names. The DataFrame
+    includes statistics such as passing completions, attempts, yards, touchdowns, interceptions, and rushing attempts, yards, and touchdowns.
+
+    Parameters:
+    -----------
+    year : int
+        The year for which the defensive statistics are to be scraped (e.g., 2023).
+    defense : str
+        The abbreviation of the defensive team (e.g., "NE" for New England Patriots).
+
+    Returns:
+    --------
+    pd.DataFrame
+        A DataFrame containing the defensive team's game-by-game statistics for the specified year, with standardized column names.
+    """
     URL = f"https://www.pro-football-reference.com/teams/{defense}/{year}/gamelog/"
 
     res = requests.get(URL, verify=False)
@@ -263,5 +335,5 @@ def scrape_defense(year, defense):
             "RUSHING_TD",
         ]
     ]
-    
+
     return df_def
