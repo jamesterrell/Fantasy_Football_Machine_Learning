@@ -1,6 +1,6 @@
 # NFL Player Performance Analysis and Forecasting
 
-This project focuses on analyzing and forecasting NFL player performance using web scraping, data processing, and machine learning techniques. By leveraging player statistics from Pro Football Reference, the project aims to provide insights into player trends, predict future performance, and offer valuable data for decision-making in sports analytics.
+This project focuses on analyzing and forecasting NFL player performance specifically for fantasy football PPR (Points Per Reception) leagues. By leveraging web scraping, data processing, and machine learning techniques, it gathers player statistics from Pro Football Reference to provide insights into player trends, predict future performance, and offer valuable data to help make informed decisions in fantasy football. 
 
 ## Table of Contents
 
@@ -11,7 +11,6 @@ This project focuses on analyzing and forecasting NFL player performance using w
 5. [Project Structure](#project-structure)
 6. [Data Scraping and Cleaning](#data-scraping-and-cleaning)
 7. [Forecasting Model](#forecasting-model)
-8. [License](#license)
 
 ## Introduction
 
@@ -118,12 +117,12 @@ Merges rushing/receiving stats with passing stats, handles discrepancies, and re
 
 ### `Predict` Class
 
-A class designed to forecast a player's performance using historical data. The class uses an autoregressive model to make predictions and can be adapted to use different regression models.
+A class designed to forecast a player's performance for fantasy football PPR (Points Per Reception) leagues using historical data. The class utilizes an autoregressive model to make predictions and is adaptable to various regression models. 
 
 - **Attributes**:
   - `df`: DataFrame containing player data.
   - `player`: Name of the player.
-  - `steps`: Number of steps (months) to forecast.
+  - `steps`: Number of steps (games) to forecast.
   - `regressor`: Regression model used for forecasting.
   - `lags`: Number of lagged values for the autoregressive model.
 
