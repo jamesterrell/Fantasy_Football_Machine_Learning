@@ -22,7 +22,6 @@ The NFL Player Performance Analysis and Forecasting project utilizes Python libr
 - **Data Cleaning and Standardization**: Cleans raw data, standardizes column names, handles missing values, and filters out irrelevant data points.
 - **Forecasting Models**: Implements time series forecasting using autoregressive models to predict future player performance.
 - **Comprehensive Data Merging**: Combines different types of player statistics (e.g., rushing, receiving, passing) for a holistic analysis.
-- **Application Potential**: Useful for fantasy sports, sports betting, team management, and coaching analytics.
 
 ## Installation
 
