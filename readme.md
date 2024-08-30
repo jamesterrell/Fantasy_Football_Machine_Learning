@@ -120,12 +120,12 @@ A class built to assess the performance of forecasting models for fantasy footba
 
 **Attributes:**
 
-- **df**: A DataFrame containing player performance data.
-- **player**: The name of the player being evaluated.
-- **steps**: The number of steps (games) to forecast.
-- **regressor**: The regression model used for evaluation.
-- **lags**: The number of lagged values used for the autoregressive model.
-- **exogs**: Exogenous variable to be used in the autoregressive model. (Will be available in `Predict` in future iterations.)
+- `df`: A DataFrame containing player performance data.
+- `player`: The name of the player being evaluated.
+- `steps`: The number of steps (games) to forecast.
+- `regressor`: The regression model used for evaluation.
+- `lags`: The number of lagged values used for the autoregressive model.
+- `exogs`: Exogenous variable to be used in the autoregressive model. (Will be available in `Predict` in future iterations.)
 
 **Methods:**
 
