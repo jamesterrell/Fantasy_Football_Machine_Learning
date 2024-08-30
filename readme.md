@@ -114,6 +114,25 @@ Merges rushing/receiving stats with passing stats, handles discrepancies, and re
 
 ## Forecasting Model
 
+### `Evaluate` Class
+
+A class built to assess the performance of forecasting models for fantasy football PPR (Points Per Reception) leagues. This class uses historical player data to evaluate model accuracy by comparing predicted values to actual outcomes.
+
+**Attributes:**
+
+- **df**: A DataFrame containing player performance data.
+- **player**: The name of the player being evaluated.
+- **steps**: The number of steps (games) to forecast.
+- **regressor**: The regression model used for evaluation.
+- **lags**: The number of lagged values used for the autoregressive model.
+- **exogs**: Exogenous variable to be used in the autoregressive model. (Will be available in `Predict` in future iterations.)
+
+**Methods:**
+
+- **`__post_init__()`**: Initializes the evaluation process by filtering data for the specified player, setting up historical data, and preparing for model evaluation.
+- **`evaluate_model()`**: Compares predicted values to actual values using various error metrics (e.g., MAPE, RMSE) to quantify the forecasting model's accuracy and reliability. Returns a DataFrame with the evaluation results.
+
+
 ### `Predict` Class
 
 A class designed to forecast a player's performance for fantasy football PPR (Points Per Reception) leagues using historical data. The class utilizes an autoregressive model to make predictions and is adaptable to various regression models. 
