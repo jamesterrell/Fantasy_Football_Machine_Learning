@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup as BS
+import re
 import pandas as pd
 import warnings
 import time
@@ -264,7 +265,7 @@ def get_all_stats(player_code_str: str):
         print(player_code_str, str(e))
 
 
-def scrape_defense(year, defense):
+def scrape_defense(year: int, defense: str):
     """
     Scrapes defensive game-by-game statistics for a specific team in a given year from Pro Football Reference.
 
@@ -291,6 +292,21 @@ def scrape_defense(year, defense):
     soup = BS(res.content, "html.parser")
 
     table = soup.find_all("table", {"id": f"gamelog_opp{year}"})
+
+    test = soup.find_all("td", {"data-stat": "opp"}, limit=17)
+    code_list = []
+    for i in test:
+        html_string = str(i)
+
+        # Regular expression to match the three-letter team code
+        match = re.search(r"/teams/([a-z]{3})/", html_string)
+
+        if match:
+            team_code = match.group(1)
+        else:
+            print("No match found")
+        code_list.append(team_code)
+
     df = pd.read_html(str(table))[0]
     flattened_columns = ["_".join(col).strip() for col in df.columns.values]
     df.columns = flattened_columns
@@ -300,22 +316,23 @@ def scrape_defense(year, defense):
         },
         inplace=True,
     )
-    # df.drop(columns=["Unnamed: 7_level_0_Unnamed: 7_level_1"], inplace=True)
     df.columns = df.columns.str.upper()
     df.columns = df.columns.str.replace(".", "")
     df.columns = df.columns.str.replace("/", "_")
     df.columns = df.columns.str.replace(".", "")
     df.columns = df.columns.str.replace(" ", "_")
     df.columns = df.columns.str.replace("%", "_PCT")
-
-    # df.fillna(0, inplace=True)
     df["YEAR"] = year
     df["WEEK"] = df["WEEK"].astype(float)
     df["DEF_TEAM"] = defense.upper()
-    df
+    df["OPP_CODE"] = code_list
+    df["OPP_CODE"] = df["OPP_CODE"].str.upper()
+
+  
     df_def = df[
         [
             "DEF_TEAM",
+            "OPP_CODE",
             "YEAR",
             "WEEK",
             "SCORE_OPP",
