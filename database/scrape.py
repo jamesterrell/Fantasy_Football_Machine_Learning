@@ -294,6 +294,7 @@ def scrape_defense(year: int, defense: str):
     table = soup.find_all("table", {"id": f"gamelog_opp{year}"})
 
     test = soup.find_all("td", {"data-stat": "opp"}, limit=17)
+
     code_list = []
     for i in test:
         html_string = str(i)
@@ -325,10 +326,13 @@ def scrape_defense(year: int, defense: str):
     df["YEAR"] = year
     df["WEEK"] = df["WEEK"].astype(float)
     df["DEF_TEAM"] = defense.upper()
-    df["OPP_CODE"] = code_list
+    # the purpose of this is to make sure code_list's length
+    # matches up with the rest of the dataframe. The NFL
+    # season legnth changed from 16 to 17 in 2021, so we need
+    # to account for that here.
+    df["OPP_CODE"] = code_list[: len(df["DEF_TEAM"])]
     df["OPP_CODE"] = df["OPP_CODE"].str.upper()
 
-  
     df_def = df[
         [
             "DEF_TEAM",

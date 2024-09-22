@@ -45,6 +45,7 @@ class Evaluate:
     df: pd.DataFrame
     player: str
     steps: int
+    target: str
     regressor: object
     lags: int
     exogs: list = None
@@ -67,7 +68,7 @@ class Evaluate:
         )
         self.data = self.data.set_index("FORECAST_DATE")
         self.data = self.data.asfreq("MS")
-        self.target = self.data["PPR"]
+        self.target = self.data[self.target]
         self.length = len(self.data)
 
         # If they don't have at least double the lag amount of games, there's not enough data to
@@ -76,7 +77,6 @@ class Evaluate:
         if self.lags * 2 > int(self.length):
             print(f"Not enough data. Adjusting lags for {self.player}.")
             self.lags = int(round(self.length / 2, 0) - 1)
-            self.steps = self.lags
 
         # If they don't have at least double the step amount of games, there's not enough data to
         # evaluate how well the model worked, so we make an adjustment.
