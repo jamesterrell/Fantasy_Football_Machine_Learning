@@ -1,6 +1,7 @@
 import pandas as pd
 
 def create_summary_stats(data: pd.DataFrame, combine_with: pd.DataFrame):
+    data.reset_index(inplace=True, drop=True)
     data['Rolling_3_Avg'] = data.groupby('PLAYER')['PPR'].rolling(3).mean().reset_index(level=0, drop=True)
     data['Rolling_5_Avg'] = data.groupby('PLAYER')['PPR'].rolling(5).mean().reset_index(level=0, drop=True)
     data['Rolling_8_Avg'] = data.groupby('PLAYER')['PPR'].rolling(8).mean().reset_index(level=0, drop=True)
