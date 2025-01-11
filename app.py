@@ -46,7 +46,7 @@ if st.sidebar.button("Run Analysis"):
             # Make predictions
             player_pred = [
                 Predict(
-                    df=st_table, player=i, steps=game_count, regressor=RandomForestRegressor, lags=9
+                    df=st_table, player=i, steps=game_count, regressor=RandomForestRegressor, lags=17
                 ).predict_season() for i in list(set(st_table['PLAYER']))
             ]
             clean_data = [row for row in player_pred if row is not None]

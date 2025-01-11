@@ -90,6 +90,9 @@ class Evaluate:
             self.lags = 1
             self.steps = 1
 
+        if int(self.length) == 1:
+            pass
+
         self.end_train = max(self.data.index) - relativedelta(months=self.steps - 1)
 
 
