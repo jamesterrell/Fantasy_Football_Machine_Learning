@@ -1,6 +1,6 @@
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 from dateutil.relativedelta import relativedelta
-from skforecast.ForecasterAutoreg import ForecasterAutoreg
+from skforecast.recursive import ForecasterRecursive
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
@@ -112,7 +112,7 @@ class Evaluate:
             the number of games predicted, number of lags, and the type of regressor used.
         """
         # try:
-        forecaster = ForecasterAutoreg(regressor=self.regressor, lags=self.lags)
+        forecaster = ForecasterRecursive(regressor=self.regressor, lags=self.lags)
 
         if self.exogs is not None:
             self.exog_vars = self.data[self.exogs]
