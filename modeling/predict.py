@@ -84,5 +84,13 @@ class Predict:
             return [self.player, predictions.sum()]
         except ValueError:
             print(
-                f"{self.player} has insufficient data. Only {self.length} games on record"
+                f"{self.player} has insufficient data. Only {self.length} games on record, adjusting lags"
             )
+            forecaster = ForecasterAutoreg(
+                regressor=self.regressor(random_state=123), lags=self.length-1
+            )
+
+            forecaster.fit(y=self.data)
+            predictions = forecaster.predict(steps=self.steps)
+
+            return [self.player, predictions.sum()]
