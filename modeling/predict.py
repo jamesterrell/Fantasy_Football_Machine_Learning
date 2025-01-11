@@ -1,4 +1,4 @@
-from skforecast.ForecasterAutoreg import ForecasterAutoreg
+from skforecast.recursive import ForecasterRecursive
 from dataclasses import dataclass
 import pandas as pd
 
@@ -74,7 +74,7 @@ class Predict:
             If insufficient data is available, a message is printed indicating the lack of data.
         """
         try:
-            forecaster = ForecasterAutoreg(
+            forecaster = ForecasterRecursive(
                 regressor=self.regressor(random_state=123), lags=self.lags
             )
 
@@ -86,7 +86,7 @@ class Predict:
             print(
                 f"{self.player} has insufficient data. Only {self.length} games on record, adjusting lags"
             )
-            forecaster = ForecasterAutoreg(
+            forecaster = ForecasterRecursive(
                 regressor=self.regressor(random_state=123), lags=self.length-1
             )
 
