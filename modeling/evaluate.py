@@ -4,7 +4,7 @@ from skforecast.recursive import ForecasterRecursive
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # type: ignore
 
 plt.style.use("seaborn-v0_8-darkgrid")
 
