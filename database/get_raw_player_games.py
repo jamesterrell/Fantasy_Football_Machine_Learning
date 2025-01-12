@@ -5,7 +5,7 @@ from scrape import get_all_stats
 pd.set_option('display.max_columns', 70)
 
 def main():
-    URL = r"https://www.pro-football-reference.com/years/2023/fantasy.htm"
+    URL = r"https://www.pro-football-reference.com/years/2024/fantasy.htm"
     res = requests.get(URL, verify=False)
     soup = BS(res.content, "html.parser")
     table = soup.find_all("td", {"class": "left"})
